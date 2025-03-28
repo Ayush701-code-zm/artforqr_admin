@@ -3,15 +3,19 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Lock, Mail, User, CheckCircle2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
-    username: "",
+    name: "", // Changed to name to match backend
     email: "",
     password: "",
     confirmPassword: "",
   });
   const [passwordMatch, setPasswordMatch] = useState(true);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   // Animation variants
   const containerVariants = {
@@ -45,20 +49,49 @@ const SignupPage = () => {
       [name]: value,
     }));
 
+    // Clear any previous errors
+    setError("");
+
     // Check password match
     if (name === "confirmPassword" || name === "password") {
       setPasswordMatch(formData.password === value);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       setPasswordMatch(false);
       return;
     }
-    // Add signup logic here
-    console.log("Signup attempted", formData);
+
+    try {
+      const response = await fetch("/api/auth/sign-up", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.username,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Handle successful signup
+        console.log("Signup successful", data);
+        // Redirect or show success message
+      } else {
+        // Handle signup error
+        console.error("Signup failed", data);
+        // Show error message to user
+      }
+    } catch (error) {
+      console.error("Signup error", error);
+    }
   };
 
   return (
@@ -93,6 +126,15 @@ const SignupPage = () => {
             Create Account
           </motion.h1>
 
+          {error && (
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+              role="alert"
+            >
+              <span className="block sm:inline">{error}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <motion.div variants={itemVariants}>
               <div className="relative">
@@ -101,9 +143,9 @@ const SignupPage = () => {
                 </div>
                 <input
                   type="text"
-                  name="username"
-                  placeholder="Username"
-                  value={formData.username}
+                  name="name"
+                  placeholder="Full Name"
+                  value={formData.name}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
@@ -175,9 +217,15 @@ const SignupPage = () => {
             <motion.div variants={itemVariants}>
               <button
                 type="submit"
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors duration-300 text-lg font-semibold"
+                disabled={loading}
+                className={`w-full text-white py-3 rounded-lg transition-colors duration-300 text-lg font-semibold 
+                  ${
+                    loading
+                      ? "bg-indigo-400 cursor-not-allowed"
+                      : "bg-indigo-600 hover:bg-indigo-700"
+                  }`}
               >
-                Sign Up
+                {loading ? "Signing Up..." : "Sign Up"}
               </button>
             </motion.div>
           </form>

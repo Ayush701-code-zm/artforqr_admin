@@ -4,10 +4,12 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createRequire } from "module";
 
 // Load environment variables
 dotenv.config();
 
+const require = createRequire(import.meta.url);
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
@@ -27,12 +29,15 @@ app
     server.use(cors());
     server.use(express.json());
 
-    // API Routes
-    import(path.join(__dirname, "src", "backend", "routes", "authRoutes"))
-      .then((authRoutes) => {
-        server.use("/api/auth", authRoutes.default);
-      })
-      .catch((err) => console.error("Error loading authRoutes:", err));
+    // Import routes using require for compatibility
+    const authRoutes = require(path.join(
+      __dirname,
+      "src",
+      "backend",
+      "routes",
+      "authRoutes"
+    ));
+    server.use("/api/auth", authRoutes);
 
     // Next.js handler for all other routes
     server.all("*", (req, res) => handle(req, res));
