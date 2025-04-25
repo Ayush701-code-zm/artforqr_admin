@@ -13,7 +13,6 @@ const require = createRequire(import.meta.url);
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
-
 const PORT = process.env.PORT || 3000;
 
 // Fix __dirname in ES Module
@@ -24,19 +23,19 @@ app
   .prepare()
   .then(() => {
     const server = express();
-
+    
     // Middleware
-  const corsOptions = {
-  origin: "*", // Allow requests from localhost:3000
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-
-// Use CORS middleware with options
-app.use(cors(corsOptions));
+    const corsOptions = {
+      origin: "*", // Allow requests from all origins
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true,
+      optionsSuccessStatus: 200,
+    };
+    
+    // Use CORS middleware with options
+    server.use(cors(corsOptions));
     server.use(express.json());
-
+    
     // Import routes using require for compatibility
     const authRoutes = require(path.join(
       __dirname,
@@ -45,11 +44,12 @@ app.use(cors(corsOptions));
       "routes",
       "authRoutes"
     ));
+    
     server.use("/api/auth", authRoutes);
-
+    
     // Next.js handler for all other routes
     server.all("*", (req, res) => handle(req, res));
-
+    
     server.listen(PORT, () => {
       console.log(`> Ready on http://localhost:${PORT}`);
     });
