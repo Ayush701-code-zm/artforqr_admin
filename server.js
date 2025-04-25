@@ -26,7 +26,15 @@ app
     const server = express();
 
     // Middleware
-    server.use(cors());
+  const corsOptions = {
+  origin: "*", // Allow requests from localhost:3000
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+// Use CORS middleware with options
+app.use(cors(corsOptions));
     server.use(express.json());
 
     // Import routes using require for compatibility
